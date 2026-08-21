@@ -46,7 +46,7 @@ flowchart LR
     Web --> BookingAPI[Appointment API]
     ChatAPI --> OpenAI[OpenAI Responses API]
     ChatAPI --> Fallback[Deterministic Parser]
-    BookingAPI --> D1[(Cloudflare D1)]
+    BookingAPI --> D1[(Neon PostgreSQL)]
 ```
 
 The frontend and server routes are implemented in a single Next.js application. The chat route converts natural-language messages into structured booking data. Appointment route handlers validate and persist confirmed bookings. Both customer and administrator views operate on the same D1 database.
@@ -58,10 +58,10 @@ The frontend and server routes are implemented in a single Next.js application. 
 | Frontend | Next.js 16, React 19, TypeScript |
 | Styling | Tailwind CSS and custom responsive CSS |
 | Server API | Next.js route handlers |
-| Database | Cloudflare D1 |
+| Database | Neon PostgreSQL |
 | ORM and migrations | Drizzle ORM and Drizzle Kit |
 | AI integration | OpenAI Responses API with structured JSON output |
-| Runtime | Cloudflare-compatible Vinext |
+| Runtime | Vercel Functions |
 | Validation | ESLint and production build checks |
 
 ## Project Structure
@@ -164,7 +164,7 @@ OPENAI_MODEL=gpt-4.1-mini
 
 ## Deployment
 
-The production application runs on a Cloudflare-compatible runtime with a D1 binding named `DB`. The deployment environment must provide `OPENAI_API_KEY` to enable live model processing; otherwise, Slotly automatically continues in fallback mode.
+The production application runs on Vercel with a serverless Neon PostgreSQL database. The deployment environment requires `DATABASE_URL` for booking persistence and can provide `OPENAI_API_KEY` to enable live model processing; otherwise, Slotly automatically continues in fallback mode.
 
 ## Demonstration
 
