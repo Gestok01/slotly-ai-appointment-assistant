@@ -1,5 +1,3 @@
-import { env } from "cloudflare:workers";
-
 type Draft = { service: string; date: string; time: string; name: string; email: string; notes: string };
 
 function nextQuestion(draft: Draft) {
@@ -34,9 +32,8 @@ export async function POST(request: Request) {
   const { message, draft } = await request.json() as { message?: string; draft?: Draft };
   if (!message?.trim() || !draft) return Response.json({ error: "Message and booking draft are required." }, { status: 400 });
 
-  const runtimeEnv = env as unknown as Record<string, string | undefined>;
-  const apiKey = runtimeEnv.OPENAI_API_KEY;
-  const model = runtimeEnv.OPENAI_MODEL ?? "gpt-4.1-mini";
+  const apiKey = process.env.OPENAI_API_KEY;
+  const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
   if (!apiKey) {
     const fields = fallbackExtract(message.trim(), draft);
     return Response.json({ fields, reply: nextQuestion(fields), source: "fallback", model: null, usage: { inputTokens: 0, outputTokens: 0 } });

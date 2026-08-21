@@ -1,7 +1,7 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { pgTable, serial, text } from "drizzle-orm/pg-core";
 
-export const appointments = sqliteTable("appointments", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const appointments = pgTable("appointments", {
+  id: serial("id").primaryKey(),
   reference: text("reference").notNull().unique(),
   customerName: text("customer_name").notNull(),
   email: text("email").notNull(),
