@@ -12,19 +12,33 @@ function nextQuestion(draft: Draft) {
 function fallbackExtract(message: string, current: Draft): Draft {
   const next = { ...current };
   const services = ["General consultation", "Dental check-up", "Physiotherapy", "Nutrition consultation"];
+  const expectedField = !current.service
+    ? "service"
+    : !current.date
+      ? "date"
+      : !current.time
+        ? "time"
+        : !current.name
+          ? "name"
+          : !current.email
+            ? "email"
+            : null;
   const email = message.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/)?.[0];
   const date = message.match(/\b20\d{2}-\d{2}-\d{2}\b/)?.[0] ?? message.match(/\b\d{1,2}[\/-]\d{1,2}[\/-]20\d{2}\b/)?.[0];
   const time = message.match(/\b\d{1,2}(?::\d{2})?\s?(?:am|pm)\b/i)?.[0];
   const service = services.find((item) => message.toLowerCase().includes(item.split(" ")[0].toLowerCase()));
+
   if (email) next.email = email;
   if (date) next.date = date;
   if (time) next.time = time.toUpperCase();
   if (service) next.service = service;
-  if (!next.service) next.service = message;
-  else if (!next.date) next.date = message;
-  else if (!next.time) next.time = message;
-  else if (!next.name) next.name = message;
-  else if (!next.email) next.email = message;
+
+  if (expectedField === "service" && !service) next.service = message;
+  else if (expectedField === "date" && !date) next.date = message;
+  else if (expectedField === "time" && !time) next.time = message;
+  else if (expectedField === "name" && !email && !date && !time && !service) next.name = message;
+  else if (expectedField === "email" && !email) next.email = message;
+
   return next;
 }
 
