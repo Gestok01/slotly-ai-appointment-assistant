@@ -2,7 +2,7 @@
 
 Slotly is a conversational appointment-booking platform that allows customers to schedule services through a simple chat interface. Instead of completing a long form, the customer can describe the required service and provide the remaining details naturally. The same application includes an administrative workspace for reviewing bookings and updating their status.
 
-[Live application](https://slotly-appointment-assistant.iamsammmstyles.chatgpt.site)
+[Live application](https://slotly-booking-assistant.vercel.app/)
 
 ## Key Features
 
