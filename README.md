@@ -113,6 +113,14 @@ The chat endpoint sends the current booking state and latest customer message to
 
 If the API key is unavailable or the model request fails, the endpoint switches to a deterministic parser. This keeps the complete booking flow usable during service interruptions and local development. The interface displays whether the session is using live AI or fallback mode and reports exact input and output token totals returned by the provider.
 
+### AI Model and Recorded Token Usage
+
+- **Runtime model:** `gpt-4.1-mini-2025-04-14`
+- **Reason for selection:** It supports structured JSON output while providing low-latency, cost-efficient extraction for a short appointment-booking conversation.
+- **Recorded complete booking session:** 430 input tokens and 152 output tokens.
+- **Measurement method:** These are the exact provider-reported totals displayed by Slotly after a booking was confirmed; they are not estimates.
+- **Fallback usage:** The deterministic parser consumes 0 model tokens.
+
 ## Validation and Reliability
 
 - Required booking fields are checked before submission.
