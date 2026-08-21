@@ -71,7 +71,12 @@ export async function POST(request: Request) {
     const parsed = JSON.parse(outputText) as Draft & { reply: string };
     const fields: Draft = { service: parsed.service, date: parsed.date, time: parsed.time, name: parsed.name, email: parsed.email, notes: parsed.notes };
     return Response.json({ fields, reply: parsed.reply || nextQuestion(fields), source: "ai", model: result.model ?? model, usage: { inputTokens: result.usage?.input_tokens ?? 0, outputTokens: result.usage?.output_tokens ?? 0 } });
-  } catch {
+  } catch (error) {
+    console.error("[api/chat] OpenAI extraction failed", {
+      error: error instanceof Error ? error.message : String(error),
+      model,
+      hasApiKey: Boolean(apiKey),
+    });
     const fields = fallbackExtract(message.trim(), draft);
     return Response.json({ fields, reply: nextQuestion(fields), source: "fallback", model: null, usage: { inputTokens: 0, outputTokens: 0 } });
   }
