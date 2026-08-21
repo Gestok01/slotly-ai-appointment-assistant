@@ -1,134 +1,173 @@
-# Slotly - AI-Powered Appointment Booking Assistant
+# Slotly
 
-Slotly is a conversational appointment booking app. A customer can describe what they need in chat, complete the required details, and confirm a booking. An admin can review all bookings and move them between confirmed, completed, and cancelled states.
+Slotly is a conversational appointment-booking platform that allows customers to schedule services through a simple chat interface. Instead of completing a long form, the customer can describe the required service and provide the remaining details naturally. The same application includes an administrative workspace for reviewing bookings and updating their status.
 
-- Live app: https://slotly-appointment-assistant.iamsammmstyles.chatgpt.site
-- GitHub: https://github.com/Gestok01/slotly-ai-appointment-assistant
+[Live application](https://slotly-appointment-assistant.iamsammmstyles.chatgpt.site)
 
-## Part 1: Problem Understanding (write this yourself - no AI)
+## Key Features
 
-> The assignment explicitly says this 150-250 word abstract must be written without AI. Replace this note with your own words before submission. Explain the booking problem, the customer flow, and the admin flow simply. Do not submit AI-written text in this section.
-
-Checklist: describe traditional booking friction, the customer flow, the admin flow, and the main benefit of the solution.
-
-## Part 2: Spec & Plan (AI-assisted)
-
-### System design
-
-```text
-Customer chat UI --+
-                   +-- Next.js route handlers -- D1 database
-Admin dashboard ---+
-```
-
-The client contains the conversation interface and admin workspace. Server route handlers validate requests and perform booking operations. Cloudflare D1 stores appointments so they survive sessions and deployments.
-
-### Feature breakdown
-
-- Conversational, step-by-step booking
-- Natural text extraction for service, date, time, name, and email
-- Suggested services, booking review, and explicit confirmation
-- Unique human-readable booking reference
+- Conversational, step-by-step appointment booking
+- Structured extraction of service, date, time, name, email, and notes
+- Suggested service options for faster booking
+- Booking review before final confirmation
+- Unique customer-facing confirmation references
 - Persistent appointment storage
-- Admin list, summary counts, and status controls
-- Responsive and keyboard-accessible interface
+- Administrative dashboard with booking summaries
+- Confirmed, completed, and cancelled status workflows
+- Exact input and output token counters for model requests
+- Deterministic fallback when the AI service is unavailable
+- Responsive interface for desktop and mobile devices
 
-### Prompt design
+## Application Flow
 
-The runtime uses OpenAI structured outputs when `OPENAI_API_KEY` is configured and automatically falls back to deterministic extraction if the model is unavailable. The model prompt is:
+### Customer
 
-```text
-You are an appointment booking assistant. Extract only information stated by the user.
-Return service, date, time, name, email, and notes as structured JSON. Never invent a
-missing value. Ask one concise question for the next missing required field. Before
-creating a booking, show a summary and require explicit confirmation.
+1. The customer starts a conversation with Slotly.
+2. Slotly extracts any appointment details already present in the message.
+3. The assistant asks only for information that is still missing.
+4. A complete booking summary is displayed for review.
+5. The customer explicitly confirms the appointment.
+6. The server validates and stores the booking, then returns a unique reference.
+
+### Administrator
+
+1. The administrator opens the Admin view.
+2. The dashboard loads appointments from the shared database.
+3. Summary cards show total, confirmed, and completed bookings.
+4. Each booking can be updated to confirmed, completed, or cancelled.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Customer[Customer Chat] --> Web[Next.js Application]
+    Admin[Admin Dashboard] --> Web
+    Web --> ChatAPI[Chat API]
+    Web --> BookingAPI[Appointment API]
+    ChatAPI --> OpenAI[OpenAI Responses API]
+    ChatAPI --> Fallback[Deterministic Parser]
+    BookingAPI --> D1[(Cloudflare D1)]
 ```
 
-Guardrails: do not infer sensitive data, do not confirm incomplete bookings, validate email server-side, and never allow chat input to perform admin actions.
+The frontend and server routes are implemented in a single Next.js application. The chat route converts natural-language messages into structured booking data. Appointment route handlers validate and persist confirmed bookings. Both customer and administrator views operate on the same D1 database.
 
-### Data model
+## Technology Stack
 
-| Field | Type | Purpose |
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 16, React 19, TypeScript |
+| Styling | Tailwind CSS and custom responsive CSS |
+| Server API | Next.js route handlers |
+| Database | Cloudflare D1 |
+| ORM and migrations | Drizzle ORM and Drizzle Kit |
+| AI integration | OpenAI Responses API with structured JSON output |
+| Runtime | Cloudflare-compatible Vinext |
+| Validation | ESLint and production build checks |
+
+## Project Structure
+
+```text
+app/
+  api/
+    appointments/       Appointment creation and listing
+    appointments/[id]/  Appointment status updates
+    chat/               AI extraction and fallback parser
+  booking-app.tsx       Customer and admin interfaces
+  globals.css           Application styling
+db/
+  index.ts              D1 database connection
+  schema.ts             Appointment schema
+drizzle/                Generated SQL migrations
+public/                 Static assets
+tests/                  Rendered output tests
+DEMO_SCRIPT.md          Five-minute demonstration outline
+```
+
+## Data Model
+
+| Field | Type | Description |
 | --- | --- | --- |
-| `id` | integer | Internal primary key |
-| `reference` | unique text | Customer confirmation code |
-| `customerName` | text | Booking owner |
-| `email` | text | Confirmation contact |
-| `service` | text | Appointment type |
-| `appointmentDate` | text | Requested date |
-| `appointmentTime` | text | Requested time |
-| `notes` | text | Optional context |
-| `status` | text | confirmed / completed / cancelled |
-| `createdAt` | ISO text | Audit timestamp |
+| `id` | Integer | Internal primary key |
+| `reference` | Unique text | Customer-facing booking reference |
+| `customerName` | Text | Name associated with the booking |
+| `email` | Text | Confirmation contact |
+| `service` | Text | Requested service |
+| `appointmentDate` | Text | Requested appointment date |
+| `appointmentTime` | Text | Requested appointment time |
+| `notes` | Text | Optional booking context |
+| `status` | Text | `confirmed`, `completed`, or `cancelled` |
+| `createdAt` | ISO timestamp | Record creation time |
 
-### Implementation plan
+## API Endpoints
 
-1. Build the responsive booking conversation.
-2. Add extraction and field-by-field clarification.
-3. Validate and persist confirmed appointments.
-4. Build the admin status workflow.
-5. Test validation, CRUD, and edge cases.
-6. Connect the LLM structured-output route and record real token usage. (Complete)
-7. Record the final voiceover demo.
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/chat` | Extract booking details and generate the next response |
+| `GET` | `/api/appointments` | List appointments for the admin dashboard |
+| `POST` | `/api/appointments` | Validate and create a confirmed booking |
+| `PATCH` | `/api/appointments/:id` | Update an appointment status |
 
-## Part 3: Implementation (AI-assisted)
+## AI Processing
 
-### Stack
+The chat endpoint sends the current booking state and latest customer message to the OpenAI Responses API. A strict JSON schema requires the model to return the six supported booking fields and the next assistant response. Existing values are preserved unless the customer clearly replaces them, and missing values are never invented.
 
-- Next.js 16, React 19, and TypeScript
-- Cloudflare-compatible Vinext runtime
-- Drizzle ORM with Cloudflare D1
-- Tailwind CSS plus custom responsive styles
+If the API key is unavailable or the model request fails, the endpoint switches to a deterministic parser. This keeps the complete booking flow usable during service interruptions and local development. The interface displays whether the session is using live AI or fallback mode and reports exact input and output token totals returned by the provider.
 
-The customer flow is complete from initial chat through explicit confirmation. A server-side AI route extracts structured booking fields and returns the provider's exact token counts. If no key is configured or the model call fails, a deterministic parser continues the conversation. The server rejects incomplete or invalid email data and creates a unique reference. The admin view reads the same persistent data and updates status through a dedicated endpoint.
+## Validation and Reliability
 
-### AI model and token usage
+- Required booking fields are checked before submission.
+- Email addresses are validated again on the server.
+- Booking references have a database-level unique constraint.
+- Appointment statuses are restricted to supported values.
+- Invalid resource IDs return `404` responses.
+- Confirmation controls are disabled while a request is running.
+- Model failures do not create incomplete or fabricated bookings.
+- Environment files and secrets are excluded from version control.
 
-- Coding assistant: OpenAI Codex (use the exact model label shown in your development environment)
-- Reason: strong TypeScript implementation, architecture planning, and rapid iteration
-- Runtime booking model: `OPENAI_MODEL` (defaults to `gpt-4.1-mini`) with structured JSON output
-- Reliability mode: deterministic parser fallback, consuming **0 model tokens**
-- Exact session usage: displayed beneath the chat composer as input and output token totals
+## Local Setup
 
-After recording the final demo, copy the displayed model ID and exact input/output totals into this section. Never estimate token usage.
+### Prerequisites
 
-### Local development
+- Node.js 22.13 or newer
+- npm
+
+### Installation
 
 ```bash
+git clone https://github.com/Gestok01/slotly-ai-appointment-assistant.git
+cd slotly-ai-appointment-assistant
 npm install
 npm run db:generate
 npm run dev
 ```
 
-Runtime variables:
+## Environment Variables
 
-- `OPENAI_API_KEY`: server-side API key; never expose it to the browser or commit it
-- `OPENAI_MODEL`: optional model override; defaults to `gpt-4.1-mini`
+Create a local `.env` file when live model extraction is required:
 
-## Part 4: Edge Cases
+```env
+OPENAI_API_KEY=your_api_key
+OPENAI_MODEL=gpt-4.1-mini
+```
 
-| Edge case | Expected behavior |
+`OPENAI_API_KEY` is read only by the server and must never be committed or exposed to the browser. `OPENAI_MODEL` is optional and overrides the default runtime model.
+
+## Available Commands
+
+| Command | Description |
 | --- | --- |
-| Empty message | Send is ignored |
-| Missing field | Assistant asks for the next missing field |
-| Invalid email | Server rejects the booking |
-| Duplicate reference | Unique database index prevents collision |
-| Ambiguous date | Kept for user confirmation; future normalizer should use locale/timezone |
-| Past date | Future availability service should reject before confirmation |
-| Unsupported service | Accepted as free text in MVP; production should use a service catalog |
-| Double confirmation | Button is disabled while the request runs |
-| Booking not found | Update API returns 404 |
-| Invalid admin status | Update API returns 400 |
-| Database unavailable | API returns an error without fabricating success |
-| Mobile viewport | Interface collapses to one column |
-| LLM unavailable | Deterministic fallback keeps booking functional |
+| `npm run dev` | Start the development server |
+| `npm run build` | Create a verified production build |
+| `npm run lint` | Run ESLint checks |
+| `npm test` | Build and run rendered output tests |
+| `npm run db:generate` | Generate SQL migrations from the schema |
 
-## Submission checklist
+## Deployment
 
-- [ ] Replace Part 1 with your own 150-250 word abstract
-- [x] Add the final GitHub repository URL
-- [ ] Record exact model and token usage if runtime AI is enabled
-- [ ] Run the production build
-- [ ] Record a voiceover demo no longer than five minutes
+The production application runs on a Cloudflare-compatible runtime with a D1 binding named `DB`. The deployment environment must provide `OPENAI_API_KEY` to enable live model processing; otherwise, Slotly automatically continues in fallback mode.
 
-See [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) for the recording outline.
+## Demonstration
+
+The repository includes [DEMO_SCRIPT.md](./DEMO_SCRIPT.md), a concise walkthrough covering the customer booking flow, administrative management, system architecture, and important edge cases.
+
+<!-- Add the original 150-250 word no-AI abstract required by the assignment before final submission. -->
