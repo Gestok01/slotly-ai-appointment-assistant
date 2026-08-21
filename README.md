@@ -174,8 +174,8 @@ OPENAI_MODEL=gpt-4.1-mini
 
 The production application runs on Vercel with a serverless Neon PostgreSQL database. The deployment environment requires `DATABASE_URL` for booking persistence and can provide `OPENAI_API_KEY` to enable live model processing; otherwise, Slotly automatically continues in fallback mode.
 
-## Demonstration
 
-The repository includes [DEMO_SCRIPT.md](./DEMO_SCRIPT.md), a concise walkthrough covering the customer booking flow, administrative management, system architecture, and important edge cases.
 
-<!-- Add the original 150-250 word no-AI abstract required by the assignment before final submission. -->
+
+
+
